@@ -1,0 +1,29 @@
+# Moto G20 (java): A11 recovery enforcing bring-up allows.
+# The A12 recovery harvest mapped to the A11 (unversioned) policy types:
+# - init sys_module + rootfs system module_load: the recovery rc insmods
+#   the touch/WLAN modules from the ramdisk.
+# - init block_device write: the BCB write to by-name/misc during
+#   reboot,recovery (A11 was permissive so this never surfaced before).
+# - ueventd sys_nice: coldboot thread priority.
+# - vendor_init rootfs:dir: vendor_init reads the ramdisk /bin layout.
+# - charger sysfs open + wake_alarm: the stock charger service.
+# - kernel block_device read: the kworker block-event poll.
+allow charger sysfs:file open;
+allow charger self:capability2 wake_alarm;
+allow init block_device:blk_file write;
+allow init self:capability sys_module;
+allow init rootfs:system module_load;
+allow kernel block_device:blk_file read;
+allow ueventd self:capability sys_nice;
+allow vendor_init rootfs:dir read;
+
+# Moto G20 (java) third harvest (2026-10-02, backported from the A12
+# recovery enforcing session):
+# - kernel block_device open: the hangdiag native_hang_monitor filp_open's
+#   by-name/misc to poll for HANGDIAG_ON and record hang states; the prior
+#   rule granted read without open, so the driver's open() got EACCES and
+#   hangdiag could never arm.
+# - charger getattr: the health loop stats the charger-manager power_supply
+#   nodes every second (537 denials per recovery session on the A12 twin).
+allow kernel block_device:blk_file open;
+allow charger sysfs:file getattr;

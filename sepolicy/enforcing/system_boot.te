@@ -1,0 +1,23 @@
+# Moto G20 (java): enforcing system-boot rules.
+# Harvested from the first enforcing boot (OTA f348e3d6, 2026-10-03): the
+# boot stalled at bootlogo on two crash-looping HALs - hangdiag recorded
+# HDST tmo=45 at 88s uptime and ramoops held all 28 avc denials, all three
+# patterns below. Scoped to the non-recovery policy: the HAL types are not
+# declared in the recovery policy build (sepolicy.recovery).
+
+ifelse(target_recovery, `true', , `
+# Boot control HAL (vendor.sprd.boot-hal-1-1): by-name/misc resolves to a
+# node labeled block_device in the merged contexts (the stock vendor
+# mmcblk_device labeling never applies here), so the stock grant misses and
+# the HAL exited status 1 in a one-per-second restart loop, taking slot
+# logic (and the boot) with it. Slot ops need the full rw set.
+allow hal_bootctrl_default block_device:blk_file { ioctl read write getattr open };
+
+# The same HAL probes /metadata/gsi (Virtual A/B) during init.
+allow hal_bootctrl_default gsi_metadata_file:dir search;
+
+# Unisoc keymaster reaches Trusty through trusty-ipc-dev0, labeled generic
+# device in our merged contexts. Without read/write the HAL never
+# registered and hwservicemanager looped on ctl.interface_start.
+allow hal_keymaster_unisoc device:chr_file { ioctl read write getattr open };
+')

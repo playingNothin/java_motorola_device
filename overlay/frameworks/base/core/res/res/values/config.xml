@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Moto G20 (java) 2026-10-03: the framework defaults leave the device with
+     no navigation bar at all and the "System navigation" picker hidden from
+     Settings. Show the bar and default to 3-button navigation (the user can
+     switch to gesture nav from the picker once it appears). -->
+<resources>
+    <bool name="config_showNavigationBar">true</bool>
+    <integer name="config_navBarInteractionMode">2</integer>
+</resources>
